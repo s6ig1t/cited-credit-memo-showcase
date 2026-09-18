@@ -1,0 +1,46 @@
+
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Northbridge.Demo.Core", "Northbridge.Demo.Core\Northbridge.Demo.Core.csproj", "{F8355CD3-6A48-4CB8-B8B5-F24E8F4A884B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Northbridge.Demo.Analysis", "Northbridge.Demo.Analysis\Northbridge.Demo.Analysis.csproj", "{6407828F-71B8-4381-A4E7-FD0D3F58F517}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Northbridge.Demo.Tests", "Northbridge.Demo.Tests\Northbridge.Demo.Tests.csproj", "{3D240BB4-2C84-4810-AEFF-7BF6ABD963FD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Northbridge.Demo.Agents", "Northbridge.Demo.Agents\Northbridge.Demo.Agents.csproj", "{0C6276A4-16C2-4223-A7FF-B0D26D12E138}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Northbridge.Demo.Api", "Northbridge.Demo.Api\Northbridge.Demo.Api.csproj", "{30FFC517-10BE-4D2F-BD46-8C6869345CCF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F8355CD3-6A48-4CB8-B8B5-F24E8F4A884B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8355CD3-6A48-4CB8-B8B5-F24E8F4A884B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8355CD3-6A48-4CB8-B8B5-F24E8F4A884B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8355CD3-6A48-4CB8-B8B5-F24E8F4A884B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6407828F-71B8-4381-A4E7-FD0D3F58F517}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6407828F-71B8-4381-A4E7-FD0D3F58F517}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6407828F-71B8-4381-A4E7-FD0D3F58F517}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6407828F-71B8-4381-A4E7-FD0D3F58F517}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D240BB4-2C84-4810-AEFF-7BF6ABD963FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D240BB4-2C84-4810-AEFF-7BF6ABD963FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D240BB4-2C84-4810-AEFF-7BF6ABD963FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D240BB4-2C84-4810-AEFF-7BF6ABD963FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0C6276A4-16C2-4223-A7FF-B0D26D12E138}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0C6276A4-16C2-4223-A7FF-B0D26D12E138}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0C6276A4-16C2-4223-A7FF-B0D26D12E138}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0C6276A4-16C2-4223-A7FF-B0D26D12E138}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30FFC517-10BE-4D2F-BD46-8C6869345CCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30FFC517-10BE-4D2F-BD46-8C6869345CCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30FFC517-10BE-4D2F-BD46-8C6869345CCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30FFC517-10BE-4D2F-BD46-8C6869345CCF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

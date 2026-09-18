@@ -1,0 +1,18 @@
+# Build artifacts
+bin/
+obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# In case a secrets file is ever accidentally created inside the repo folder
+# instead of the OS-level User Secrets location, this makes sure it can never
+# be committed by mistake.
+secrets.json
+**/secrets.json
+
+# OS cruft
+.DS_Store
+Thumbs.db

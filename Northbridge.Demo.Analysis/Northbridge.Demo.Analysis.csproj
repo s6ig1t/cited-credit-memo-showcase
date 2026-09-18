@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Northbridge.Demo.Analysis</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    This project references ONLY Northbridge.Demo.Core. That is not an accident or an oversight:
+    it is the whole point of the project split. Everything in here is plain, deterministic
+    C# arithmetic over already-extracted numbers. There is no HttpClient, no AI SDK, no
+    network call anywhere in this project, on purpose, so that anyone reviewing the solution
+    can see at a glance (from the .csproj alone, before reading a line of code) that the
+    layer responsible for financial calculations cannot possibly be influenced by an LLM.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\Northbridge.Demo.Core\Northbridge.Demo.Core.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Northbridge.Demo.Core</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Deliberately no package references here.
+    Core holds only domain models: plain records/classes describing the shapes
+    of data that flow between layers (extracted line items, citations, ratios,
+    memo sections). Keeping it dependency-free means these types can be
+    referenced from Analysis, Agents, Api, and Tests without dragging in
+    ASP.NET Core, HTTP clients, or AI SDKs into a layer that should just be data.
+  -->
+
+</Project>

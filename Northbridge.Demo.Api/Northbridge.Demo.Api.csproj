@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Northbridge.Demo.Api</RootNamespace>
+    <!--
+      This GUID is what makes "Manage User Secrets" available when you right-click this
+      project in Visual Studio. It doesn't need to mean anything; it's just a stable id that
+      points at a secrets.json file VS keeps OUTSIDE this project folder (under your Windows
+      user profile), specifically so the API key can never accidentally end up in source
+      control or in a zip like this one.
+    -->
+    <UserSecretsId>86a8b131-1621-4fdd-ad32-b2f3b5f21fd6</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Swashbuckle: mature, stable, non-preview. Gives us the Swagger UI test page. -->
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      This is the only project in the solution that references all three lower layers.
+      That's expected and correct: the Api's whole job is orchestration, calling Agents,
+      then Analysis, then Agents again, in the right order. Nothing here does extraction,
+      calculation, or drafting itself; it just wires those three capabilities together
+      behind one HTTP endpoint.
+    -->
+    <ProjectReference Include="..\Northbridge.Demo.Core\Northbridge.Demo.Core.csproj" />
+    <ProjectReference Include="..\Northbridge.Demo.Analysis\Northbridge.Demo.Analysis.csproj" />
+    <ProjectReference Include="..\Northbridge.Demo.Agents\Northbridge.Demo.Agents.csproj" />
+  </ItemGroup>
+
+</Project>

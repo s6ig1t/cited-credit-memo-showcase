@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Northbridge Demo &mdash; Credit Memo Pipeline</title>
+<style>
+  :root {
+    --ink: #1B2430;
+    --ink-soft: #4B5563;
+    --paper: #F2F1ED;
+    --surface: #FFFFFF;
+    --rule: #D8D5CC;
+    --accent: #2F5D62;
+    --good: #3F6B4F;
+    --watch: #A6752C;
+    --breach: #B3402A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.5;
+  }
+
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  h1, h2, h3, .serif {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-weight: 400;
+  }
+
+  /* ---------- Intake ---------- */
+
+  .intake {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 32px;
+  }
+
+  .intake h1 {
+    font-size: 28px;
+    margin: 0 0 6px;
+  }
+
+  .intake p.lede {
+    color: var(--ink-soft);
+    margin: 0 0 28px;
+    max-width: 56ch;
+  }
+
+  .drop-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  input[type="file"] {
+    flex: 1;
+    min-width: 220px;
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 11px 20px;
+    font-size: 14px;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  button.primary:disabled {
+    background: #93a3a6;
+    cursor: default;
+  }
+
+  button.primary:hover:not(:disabled) {
+    background: #254b4f;
+  }
+
+  .status-line {
+    margin-top: 16px;
+    font-size: 14px;
+    color: var(--ink-soft);
+    min-height: 20px;
+  }
+
+  .status-line.error {
+    color: var(--breach);
+  }
+
+  /* ---------- Result ---------- */
+
+  .result {
+    margin-top: 32px;
+    display: none;
+  }
+
+  .result.visible {
+    display: block;
+    animation: reveal 320ms ease-out;
+  }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .memo-card {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 40px;
+  }
+
+  .letterhead {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 20px;
+    margin-bottom: 28px;
+  }
+
+  .letterhead .eyebrow {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .letterhead h1 {
+    font-size: 30px;
+    margin: 4px 0 8px;
+  }
+
+  .letterhead .meta {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .warnings {
+    background: #FBF3E9;
+    border: 1px solid #E4CBA3;
+    border-radius: 3px;
+    padding: 14px 18px;
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
+
+  .warnings h3 {
+    font-size: 14px;
+    font-family: inherit;
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+
+  .warnings ul {
+    margin: 0;
+    padding-left: 20px;
+  }
+
+  section.block {
+    margin-bottom: 32px;
+  }
+
+  section.block h2 {
+    font-size: 19px;
+    margin: 0 0 14px;
+  }
+
+  /* ---------- Ratio ledger table ---------- */
+
+  table.ledger {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  table.ledger th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 8px 8px 0;
+  }
+
+  table.ledger th.num, table.ledger td.num {
+    text-align: right;
+  }
+
+  table.ledger td {
+    padding: 10px 8px 10px 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  table.ledger tr:last-child td {
+    border-bottom: none;
+  }
+
+  .ratio-name {
+    font-weight: 600;
+  }
+
+  .ratio-formula {
+    color: var(--ink-soft);
+    font-size: 12px;
+    margin-top: 2px;
+  }
+
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .status .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  .status.none .dot { background: var(--good); }
+  .status.watch .dot { background: var(--watch); }
+  .status.breach .dot { background: var(--breach); }
+
+  .status.none { color: var(--good); }
+  .status.watch { color: var(--watch); }
+  .status.breach { color: var(--breach); }
+
+  /* ---------- Memo narrative + footnotes ---------- */
+
+  .memo-section {
+    margin-bottom: 26px;
+  }
+
+  .memo-section h3 {
+    font-size: 17px;
+    margin: 0 0 8px;
+  }
+
+  .memo-section p {
+    margin: 0 0 10px;
+    max-width: 68ch;
+  }
+
+  .footnote-refs {
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+
+  .footnote-refs .fn-label {
+    margin-right: 6px;
+  }
+
+  button.fn-marker {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    padding: 0 3px;
+    text-decoration: underline;
+  }
+
+  .fn-detail {
+    display: none;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--paper);
+    border-left: 2px solid var(--accent);
+    padding: 8px 12px;
+    margin: 6px 0 0;
+  }
+
+  .fn-detail.open {
+    display: block;
+  }
+
+  .fn-detail .page {
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ---------- Extraction detail (collapsible) ---------- */
+
+  details.extraction {
+    font-size: 13px;
+    border-top: 1px solid var(--rule);
+    padding-top: 18px;
+  }
+
+  details.extraction summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  table.extraction-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 14px;
+    font-size: 13px;
+  }
+
+  table.extraction-table th {
+    text-align: left;
+    font-size: 11px;
+    color: var(--ink-soft);
+    border-bottom: 1px solid var(--rule);
+    padding: 0 8px 6px 0;
+  }
+
+  table.extraction-table td {
+    padding: 7px 8px 7px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  table.extraction-table td.num { text-align: right; }
+
+  @media (max-width: 560px) {
+    .intake, .memo-card { padding: 24px; }
+    table.ledger th:nth-child(3), table.ledger td:nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="intake">
+    <h1>Credit memo pipeline</h1>
+    <p class="lede">
+      Upload a financial statement PDF. It's read, spread, and checked against policy
+      thresholds deterministically, then drafted into a cited credit memo &mdash;
+      every figure traceable back to the page it came from.
+    </p>
+    <div class="drop-row">
+      <input type="file" id="fileInput" accept="application/pdf" />
+      <button class="primary" id="generateBtn">Generate credit memo</button>
+    </div>
+    <div class="status-line" id="statusLine"></div>
+  </div>
+
+  <div class="result" id="result"></div>
+
+</div>
+
+<script>
+(function () {
+  const fileInput = document.getElementById('fileInput');
+  const generateBtn = document.getElementById('generateBtn');
+  const statusLine = document.getElementById('statusLine');
+  const resultEl = document.getElementById('result');
+
+  const severityMeta = {
+    0: { cls: 'none', label: 'Meets policy' },
+    1: { cls: 'watch', label: 'Watch' },
+    2: { cls: 'breach', label: 'Breach' }
+  };
+
+  generateBtn.addEventListener('click', async () => {
+    const file = fileInput.files[0];
+    if (!file) {
+      setStatus('Choose a PDF first.', true);
+      return;
+    }
+
+    resultEl.classList.remove('visible');
+    resultEl.innerHTML = '';
+    setStatus('Reading document, calculating ratios, and drafting the memo. This calls Claude twice, so it can take fifteen to thirty seconds.', false);
+    generateBtn.disabled = true;
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/credit-memo', { method: 'POST', body: formData });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Server returned ${response.status}: ${text || response.statusText}`);
+      }
+
+      const memo = await response.json();
+      renderMemo(memo);
+      setStatus('', false);
+    } catch (err) {
+      setStatus('Something went wrong: ' + err.message, true);
+    } finally {
+      generateBtn.disabled = false;
+    }
+  });
+
+  function setStatus(message, isError) {
+    statusLine.textContent = message;
+    statusLine.classList.toggle('error', !!isError);
+  }
+
+  function renderMemo(memo) {
+    let footnoteCounter = 0;
+
+    function renderFootnotes(citations) {
+      if (!citations || citations.length === 0) return '';
+      const marks = [];
+      const details = [];
+      citations.forEach((c) => {
+        footnoteCounter++;
+        const id = 'fn-' + footnoteCounter;
+        marks.push(`<button type="button" class="fn-marker" data-target="${id}">[${footnoteCounter}]</button>`);
+        details.push(
+          `<div class="fn-detail" id="${id}"><span class="page">Page ${c.pageNumber}.</span> &ldquo;${escapeHtml(c.snippet || '')}&rdquo;</div>`
+        );
+      });
+      return `<div class="footnote-refs"><span class="fn-label">Sources:</span>${marks.join(' ')}</div>${details.join('')}`;
+    }
+
+    const ratioRows = memo.spread.ratios.map((r) => {
+      const sev = severityMeta[r.flag.severity] || severityMeta[0];
+      return `
+        <tr>
+          <td>
+            <div class="ratio-name">${escapeHtml(r.name)}</div>
+            <div class="ratio-formula">${escapeHtml(r.formulaDescription)}</div>
+            ${renderFootnotes(r.supportingCitations)}
+          </td>
+          <td class="num">${formatValue(r.name, r.value)}</td>
+          <td>
+            <span class="status ${sev.cls}"><span class="dot"></span>${sev.label}</span>
+          </td>
+        </tr>`;
+    }).join('');
+
+    const warningsHtml = (memo.spread.calculationWarnings && memo.spread.calculationWarnings.length > 0)
+      ? `<div class="warnings">
+           <h3>Could not be evaluated</h3>
+           <ul>${memo.spread.calculationWarnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>
+         </div>`
+      : '';
+
+    const sectionsHtml = memo.sections.map((s) => `
+      <div class="memo-section">
+        <h3>${escapeHtml(s.heading)}</h3>
+        <p>${escapeHtml(s.narrativeText)}</p>
+        ${renderFootnotes(s.citedSources)}
+      </div>
+    `).join('');
+
+    const extractionRows = memo.spread.extraction.lineItems.map((li) => `
+      <tr>
+        <td>${escapeHtml(li.labelAsShownInDocument)}</td>
+        <td>${escapeHtml(li.period)}</td>
+        <td class="num">${Number(li.value).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}</td>
+        <td>p.${li.citation.pageNumber}</td>
+      </tr>
+    `).join('');
+
+    resultEl.innerHTML = `
+      <div class="memo-card">
+        <div class="letterhead">
+          <div class="eyebrow">Credit memo &mdash; draft</div>
+          <h1>${escapeHtml(memo.borrowerName)}</h1>
+          <div class="meta">
+            ${escapeHtml(memo.spread.extraction.statementPeriodDescription)}
+            &nbsp;&middot;&nbsp; Generated ${new Date(memo.generatedAtUtc).toLocaleString()}
+          </div>
+        </div>
+
+        ${warningsHtml}
+
+        <section class="block">
+          <h2>Financial spread</h2>
+          <table class="ledger">
+            <thead>
+              <tr><th>Ratio</th><th class="num">Value</th><th>Status</th></tr>
+            </thead>
+            <tbody>${ratioRows}</tbody>
+          </table>
+        </section>
+
+        <section class="block">
+          <h2>Memo</h2>
+          ${sectionsHtml}
+        </section>
+
+        <details class="extraction">
+          <summary>View full extracted line items (${memo.spread.extraction.lineItems.length})</summary>
+          <table class="extraction-table">
+            <thead>
+              <tr><th>Label as shown on statement</th><th>Period</th><th>Value</th><th>Source</th></tr>
+            </thead>
+            <tbody>${extractionRows}</tbody>
+          </table>
+        </details>
+      </div>
+    `;
+
+    resultEl.classList.add('visible');
+
+    resultEl.querySelectorAll('.fn-marker').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const detail = document.getElementById(btn.dataset.target);
+        if (detail) detail.classList.toggle('open');
+      });
+    });
+  }
+
+  function formatValue(name, value) {
+    if (name === 'Working Capital') {
+      return Number(value).toLocaleString(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+    }
+    return Number(value).toFixed(2);
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+})();
+</script>
+
+</body>
+</html>

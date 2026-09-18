@@ -1,0 +1,34 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Northbridge.Demo.Agents</RootNamespace>
+  </PropertyGroup>
+
+  <!--
+    Only two explicit package references needed. Microsoft.Agents.AI.Abstractions and
+    Microsoft.Extensions.AI (which supply AIAgent's underlying types like ChatMessage,
+    TextContent, DataContent used in ExtractionAgent/MemoAgent) both come in transitively
+    through these two, confirmed by removing them and rebuilding successfully. No point
+    referencing a package explicitly when another dependency already guarantees it's there;
+    it's one less version number to keep in sync.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Agents.AI" Version="1.21.0" />
+    <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.21.0-preview.260911.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!--
+      References Core ONLY, same discipline as Analysis. This project talks to Claude and
+      builds structured results from what comes back; it does not do financial arithmetic,
+      that stays in Analysis. Agents and Analysis both depend on Core, but never on each other,
+      which is what keeps "the part that calls an LLM" and "the part that does math" fully
+      decoupled at the project-reference level, not just by convention.
+    -->
+    <ProjectReference Include="..\Northbridge.Demo.Core\Northbridge.Demo.Core.csproj" />
+  </ItemGroup>
+
+</Project>
