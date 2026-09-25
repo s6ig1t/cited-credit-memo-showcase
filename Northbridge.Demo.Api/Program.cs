@@ -1,40 +1,68 @@
 using Northbridge.Demo.Agents;
 using Northbridge.Demo.Analysis;
 using Northbridge.Demo.Core;
-using Anthropic;
 using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// User secrets is how the Anthropic API key gets into this app locally: never hardcoded,
-// never in appsettings.json (which would get committed to source control). In a real
-// company deployment, this line would be replaced by reading from a secrets manager (AWS
-// Secrets Manager, Azure Key Vault) or an environment variable injected by CI/CD at deploy
-// time, exactly the distinction between personal and production credential handling this
-// project is meant to demonstrate understanding of.
+// User secrets is how the API keys get into this app locally: never hardcoded, never in
+// appsettings.json (which would get committed to source control). In a real company
+// deployment, this line would be replaced by reading from a secrets manager (AWS Secrets
+// Manager, Azure Key Vault) or an environment variable injected by CI/CD at deploy time,
+// exactly the distinction between personal and production credential handling this project
+// is meant to demonstrate understanding of.
 builder.Configuration.AddUserSecrets<Program>();
+
+// Which provider backs this pipeline: Llm:Provider in appsettings.json, defaulting to
+// Anthropic if the setting is somehow missing. This is the only place that reads this
+// setting; everything past this point works with a provider-neutral AIAgent.
+var providerSetting = builder.Configuration["Llm:Provider"] ?? "Anthropic";
+if (!Enum.TryParse<LlmProvider>(providerSetting, ignoreCase: true, out var provider))
+{
+    throw new InvalidOperationException(
+        $"Llm:Provider is set to '{providerSetting}', which isn't a recognized provider. " +
+        "Valid values are 'Anthropic' or 'OpenAI'. Check appsettings.json.");
+}
+
+// AnthropicApiKey and OpenAIApiKey are kept as two separate named secrets, not one generic
+// "ApiKey", on purpose. The two keys are not interchangeable (each is only valid against its
+// own provider's API), and only the key for whichever provider is actually selected needs to
+// exist, so only that one is read and validated below; a key for the unused provider being
+// absent is not an error.
+static string RequireApiKey(IConfiguration configuration, string secretName, string provider)
+{
+    var apiKey = configuration[secretName];
+
+    if (string.IsNullOrWhiteSpace(apiKey))
+    {
+        throw new InvalidOperationException(
+            $"{secretName} is not set, but Llm:Provider is '{provider}'. Right-click " +
+            $"Northbridge.Demo.Api in Visual Studio, choose 'Manage User Secrets', and add: " +
+            $"{{ \"{secretName}\": \"your-key-here\" }}");
+    }
+
+    return apiKey;
+}
 
 // Registered with an EXPLICIT type parameter on purpose, not just AddSingleton(sp => ...).
 // A factory lambda's return type is inferred from its compile-time expression type, which
 // can silently differ from the type you actually meant to register under, especially with
 // object initializers or wrapper methods. Being explicit here removes any ambiguity about
 // what type this is registered as, and costs nothing.
-builder.Services.AddSingleton<AnthropicClient>(sp =>
-{
-    var apiKey = builder.Configuration["AnthropicApiKey"];
+//
+// Two separate AIAgent registrations, one per agent role (extraction, memo drafting), each
+// built through LlmAgentFactory with that role's own fixed name and instructions. Both are
+// built from the same provider/apiKey pair resolved once above, so a single Llm:Provider
+// setting switches the whole pipeline, not just one stage of it.
+var apiKey = provider == LlmProvider.Anthropic
+    ? RequireApiKey(builder.Configuration, "AnthropicApiKey", provider.ToString())
+    : RequireApiKey(builder.Configuration, "OpenAIApiKey", provider.ToString());
 
-    if (string.IsNullOrWhiteSpace(apiKey))
-    {
-        throw new InvalidOperationException(
-            "AnthropicApiKey is not set. Right-click Northbridge.Demo.Api in Visual Studio, choose " +
-            "'Manage User Secrets', and add: { \"AnthropicApiKey\": \"sk-ant-your-key-here\" }");
-    }
+builder.Services.AddSingleton<ExtractionAgent>(sp =>
+    new ExtractionAgent(LlmAgentFactory.CreateExtractionAgent(provider, apiKey)));
 
-    return new AnthropicClient { ApiKey = apiKey };
-});
-
-builder.Services.AddSingleton<ExtractionAgent>(sp => new ExtractionAgent(sp.GetRequiredService<AnthropicClient>()));
-builder.Services.AddSingleton<MemoAgent>(sp => new MemoAgent(sp.GetRequiredService<AnthropicClient>()));
+builder.Services.AddSingleton<MemoAgent>(sp =>
+    new MemoAgent(LlmAgentFactory.CreateMemoAgent(provider, apiKey)));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

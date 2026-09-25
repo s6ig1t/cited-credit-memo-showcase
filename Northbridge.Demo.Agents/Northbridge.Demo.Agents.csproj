@@ -8,16 +8,25 @@
   </PropertyGroup>
 
   <!--
-    Only two explicit package references needed. Microsoft.Agents.AI.Abstractions and
-    Microsoft.Extensions.AI (which supply AIAgent's underlying types like ChatMessage,
-    TextContent, DataContent used in ExtractionAgent/MemoAgent) both come in transitively
-    through these two, confirmed by removing them and rebuilding successfully. No point
-    referencing a package explicitly when another dependency already guarantees it's there;
-    it's one less version number to keep in sync.
+    Microsoft.Agents.AI.Abstractions and Microsoft.Extensions.AI (which supply AIAgent's
+    underlying types like ChatMessage, TextContent, DataContent used in ExtractionAgent/
+    MemoAgent) come in transitively through the packages below, confirmed by removing them and
+    rebuilding successfully. No point referencing a package explicitly when another dependency
+    already guarantees it's there; it's one less version number to keep in sync.
+
+    Both provider connectors, Anthropic and OpenAI, are referenced unconditionally here. Which
+    one actually gets used is a runtime decision (see LlmAgentFactory), not a compile-time one,
+    so both have to be present in the build regardless of what a given deployment ends up
+    selecting.
+
+    Microsoft.Agents.AI.OpenAI, unlike the Anthropic connector, ships as a plain stable
+    release rather than a preview build, confirmed against the installed package version.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.Agents.AI" Version="1.21.0" />
     <PackageReference Include="Microsoft.Agents.AI.Anthropic" Version="1.21.0-preview.260911.1" />
+    <PackageReference Include="Microsoft.Agents.AI.OpenAI" Version="1.21.0" />
+    <PackageReference Include="OpenAI" Version="2.14.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Northbridge.Demo.Core;
-using Anthropic;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -12,11 +11,15 @@ namespace Northbridge.Demo.Agents;
 /// source document. Everything downstream, ratio calculation (Northbridge.Demo.Analysis) and
 /// memo drafting (MemoAgent), works from this agent's output, never from the PDF directly.
 ///
-/// Builds its own AIAgent from a shared AnthropicClient via AsAIAgent(...), the official
-/// Microsoft.Agents.AI.Anthropic connector pattern, rather than a hand-rolled IChatClient
-/// adapter. Each agent class in this project owns its own AIAgent instance because each
-/// needs different fixed instructions (this one: extraction only, never analysis); the
-/// AnthropicClient itself (and its API key) is the one thing shared between them.
+/// Takes an already-built AIAgent rather than a provider-specific client. Which provider
+/// (Anthropic, OpenAI) actually backs that AIAgent is decided once, upstream, in Program.cs's
+/// LlmAgentFactory; this class has no idea which one it got and does not need to. That is the
+/// whole point of building against Microsoft.Agents.AI's AIAgent abstraction instead of coding
+/// directly against AnthropicClient here: this class, and MemoAgent, stay provider-agnostic,
+/// and a new provider can be added later by changing only the factory, not either agent class.
+/// Each agent class still gets its own AIAgent instance, built with its own fixed instructions
+/// (this one: extraction only, never analysis) and its own name, even though both instances
+/// may ultimately be backed by the same underlying provider client.
 ///
 /// The PDF is passed as a multimodal ChatMessage (TextContent + DataContent), the standard
 /// Microsoft.Extensions.AI pattern AIAgent is built on. This has been run end to end against
@@ -27,12 +30,9 @@ public sealed class ExtractionAgent
 {
     private readonly AIAgent _agent;
 
-    public ExtractionAgent(AnthropicClient anthropicClient, string model = "claude-sonnet-4-5")
+    public ExtractionAgent(AIAgent agent)
     {
-        _agent = anthropicClient.AsAIAgent(
-            model: model,
-            name: "FinancialExtractionAgent",
-            instructions: SystemInstructions);
+        _agent = agent;
     }
 
     public async Task<FinancialExtractionResult> ExtractAsync(byte[] pdfBytes, CancellationToken cancellationToken = default)
@@ -92,8 +92,10 @@ public sealed class ExtractionAgent
     };
 
     // Fixed system instructions: this agent's behavior should not vary per call, so this is
-    // a constant rather than something built per-request.
-    private const string SystemInstructions = """
+    // a constant rather than something built per-request. Internal, not private, so
+    // LlmAgentFactory (same assembly) can read it when building this agent's AIAgent; nothing
+    // outside this assembly has any business seeing it.
+    internal const string SystemInstructions = """
         You are a financial statement extraction specialist for a commercial lending platform.
         Your only job is to read a financial statement document and extract specific line items
         into a strict JSON format. You do not analyze, calculate ratios, or offer opinions on

@@ -58,23 +58,33 @@ Northbridge.Demo.Tests      36 unit tests against Analysis — boundary values,
 
 - .NET 10 / C# 14
 - ASP.NET Core Minimal APIs
-- `Microsoft.Agents.AI` + `Microsoft.Agents.AI.Anthropic` (official Claude connector)
-- Claude (Sonnet), called for document extraction and narrative drafting only
+- `Microsoft.Agents.AI` + `Microsoft.Agents.AI.Anthropic` and `Microsoft.Agents.AI.OpenAI`
+  (both connectors are referenced; which one runs is a runtime choice, not a compile-time one)
+- Claude (Sonnet) or GPT, selected via configuration, called for document extraction and
+  narrative drafting only
 - xUnit for the Analysis test suite
 - Vanilla HTML/CSS/JS for the memo viewer
 
 ## Running it
 
-**Prerequisites:** .NET 10 SDK, Visual Studio 2026 (or `dotnet` CLI), an Anthropic API key.
+**Prerequisites:** .NET 10 SDK, Visual Studio 2026 (or `dotnet` CLI), an API key for whichever
+provider you plan to use (Anthropic or OpenAI).
 
 1. Clone the repo and open `NorthbridgeDemo.sln`.
-2. Set your API key via .NET User Secrets on the `Northbridge.Demo.Api` project:
+2. Pick a provider in `Northbridge.Demo.Api/appsettings.json` (`Llm:Provider`, either
+   `"Anthropic"` or `"OpenAI"`; defaults to `Anthropic`).
+3. Set the matching API key via .NET User Secrets on the `Northbridge.Demo.Api` project:
    ```
    dotnet user-secrets set "AnthropicApiKey" "sk-ant-..." --project Northbridge.Demo.Api
    ```
-   (Or right-click the project in Visual Studio → *Manage User Secrets*.)
-3. Run `Northbridge.Demo.Api` (F5, or `dotnet run --project Northbridge.Demo.Api`).
-4. Open the root URL in a browser, upload a financial statement PDF, and click
+   or, for OpenAI:
+   ```
+   dotnet user-secrets set "OpenAIApiKey" "sk-..." --project Northbridge.Demo.Api
+   ```
+   (Or right-click the project in Visual Studio → *Manage User Secrets*, and add either or
+   both; only the key for the selected provider is actually read.)
+4. Run `Northbridge.Demo.Api` (F5, or `dotnet run --project Northbridge.Demo.Api`).
+5. Open the root URL in a browser, upload a financial statement PDF, and click
    *Generate credit memo*. (Swagger is also available at `/swagger` for direct
    API testing.)
 

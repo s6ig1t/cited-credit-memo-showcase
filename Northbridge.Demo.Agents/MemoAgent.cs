@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Northbridge.Demo.Core;
-using Anthropic;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
 
@@ -23,20 +22,19 @@ namespace Northbridge.Demo.Agents;
 /// The model chooses what to write about; it never gets a chance to misreport where a number
 /// came from.
 ///
-/// Builds its own AIAgent from the shared AnthropicClient, same pattern as ExtractionAgent,
-/// but with its own distinct name and instructions, since this agent's job (drafting prose
-/// from verified numbers) is deliberately different from extraction's job (reading a document).
+/// Takes an already-built AIAgent, same as ExtractionAgent, rather than a provider-specific
+/// client, so this class has no idea whether Claude or GPT is behind it, and does not need
+/// to. Its own distinct name and instructions still get baked into that AIAgent by whichever
+/// factory built it, since this agent's job (drafting prose from verified numbers) is
+/// deliberately different from extraction's job (reading a document).
 /// </summary>
 public sealed class MemoAgent
 {
     private readonly AIAgent _agent;
 
-    public MemoAgent(AnthropicClient anthropicClient, string model = "claude-sonnet-4-5")
+    public MemoAgent(AIAgent agent)
     {
-        _agent = anthropicClient.AsAIAgent(
-            model: model,
-            name: "CreditMemoDraftingAgent",
-            instructions: SystemInstructions);
+        _agent = agent;
     }
 
     public async Task<CreditMemo> DraftAsync(FinancialSpread spread, CancellationToken cancellationToken = default)
@@ -144,7 +142,9 @@ public sealed class MemoAgent
         PropertyNameCaseInsensitive = true
     };
 
-    private const string SystemInstructions = """
+    // Internal, not private, so LlmAgentFactory (same assembly) can read it when building this
+    // agent's AIAgent.
+    internal const string SystemInstructions = """
         You are a credit memo drafting assistant for a commercial lending platform. You write
         clear, professional underwriting narrative from financial data that has already been
         calculated and verified elsewhere. You never perform arithmetic yourself, never
